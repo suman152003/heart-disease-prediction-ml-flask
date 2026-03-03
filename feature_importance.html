@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-bar-chart-fill"></i> Feature Importance Analysis
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Report ID:</strong> {{ record.id }} | 
+                        <strong>Date:</strong> {{ record.timestamp.strftime('%Y-%m-%d %H:%M:%S') }} |
+                        <strong>Risk Level:</strong> <span class="badge {% if record.prediction == 'High Risk' %}bg-danger{% elif record.prediction == 'Medium Risk' %}bg-warning{% else %}bg-success{% endif %}">{{ record.prediction }}</span>
+                    </div>
+
+                    <h5 class="mt-4 mb-3">Contributing Factors to Your Risk Assessment</h5>
+                    <p class="text-muted">This analysis shows which medical factors contribute most to your heart disease risk prediction.</p>
+
+                    <div class="mb-4">
+                        {% for feature, importance in features %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-bold">
+                                    {% if feature == 'age' %}Age
+                                    {% elif feature == 'sex' %}Sex
+                                    {% elif feature == 'cp' %}Chest Pain Type
+                                    {% elif feature == 'trestbps' %}Resting Blood Pressure
+                                    {% elif feature == 'chol' %}Cholesterol
+                                    {% elif feature == 'fbs' %}Fasting Blood Sugar
+                                    {% elif feature == 'restecg' %}Resting ECG
+                                    {% elif feature == 'thalach' %}Max Heart Rate
+                                    {% elif feature == 'exang' %}Exercise Angina
+                                    {% elif feature == 'oldpeak' %}ST Depression
+                                    {% elif feature == 'slope' %}Slope
+                                    {% elif feature == 'ca' %}Major Vessels
+                                    {% elif feature == 'thal' %}Thalassemia
+                                    {% else %}{{ feature }}{% endif %}
+                                </span>
+                                <span class="text-muted">{{ "%.1f"|format(importance) }}%</span>
+                            </div>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar {% if importance > 15 %}bg-danger{% elif importance > 8 %}bg-warning{% else %}bg-info{% endif %}" 
+                                     role="progressbar" 
+                                     style="width: {{ importance }}%" 
+                                     aria-valuenow="{{ importance }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ "%.1f"|format(importance) }}%
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                Your value: 
+                                {% if feature == 'sex' %}
+                                    {{ 'Male' if feature_values[feature] == 1 else 'Female' }}
+                                {% elif feature == 'cp' %}
+                                    {% if feature_values[feature] == 0 %}Typical Angina{% elif feature_values[feature] == 1 %}Atypical Angina{% elif feature_values[feature] == 2 %}Non-anginal Pain{% else %}Asymptomatic{% endif %}
+                                {% elif feature == 'fbs' %}
+                                    {{ 'Yes (>120 mg/dl)' if feature_values[feature] == 1 else 'No (≤120 mg/dl)' }}
+                                {% elif feature == 'exang' %}
+                                    {{ 'Yes' if feature_values[feature] == 1 else 'No' }}
+                                {% else %}
+                                    {{ feature_values[feature] }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <strong><i class="bi bi-info-circle"></i> Note:</strong> Higher importance values indicate factors that have a greater impact on your risk prediction. Focus on managing the top contributing factors for better heart health.
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{{ url_for('view_result', rec_id=record.id) }}" class="btn btn-primary">
+                            <i class="bi bi-arrow-left"></i> Back to Results
+                        </a>
+                        <a href="{{ url_for('generate_pdf', rec_id=record.id) }}" class="btn btn-danger" target="_blank">
+                            <i class="bi bi-file-pdf"></i> Download PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

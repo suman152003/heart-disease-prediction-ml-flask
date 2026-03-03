@@ -1,0 +1,125 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-dark text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-graph-up"></i> Advanced Analytics Dashboard
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-bg-primary">
+                <div class="card-body text-center">
+                    <h5>Total Predictions</h5>
+                    <h2>{{ analytics.total_predictions }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-success">
+                <div class="card-body text-center">
+                    <h5>Avg Health Score</h5>
+                    <h2>{{ "%.1f"|format(analytics.avg_health_score) }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-info">
+                <div class="card-body text-center">
+                    <h5>Avg Age</h5>
+                    <h2>{{ "%.1f"|format(analytics.avg_age) }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-warning">
+                <div class="card-body text-center">
+                    <h5>Avg Cholesterol</h5>
+                    <h2>{{ "%.1f"|format(analytics.avg_chol) }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-bar-chart"></i> Health Scores by Risk Category</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="scoreChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-info-circle"></i> Key Insights</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <strong>High Risk Avg Score:</strong> {{ "%.1f"|format(analytics.high_risk_avg_score) }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Medium Risk Avg Score:</strong> {{ "%.1f"|format(analytics.med_risk_avg_score) }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Low Risk Avg Score:</strong> {{ "%.1f"|format(analytics.low_risk_avg_score) }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Average Blood Pressure:</strong> {{ "%.1f"|format(analytics.avg_bp) }} mm Hg
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const ctx = document.getElementById('scoreChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['High Risk', 'Medium Risk', 'Low Risk'],
+            datasets: [{
+                label: 'Average Health Score',
+                data: [
+                    {{ analytics.high_risk_avg_score }},
+                    {{ analytics.med_risk_avg_score }},
+                    {{ analytics.low_risk_avg_score }}
+                ],
+                backgroundColor: ['#dc3545', '#ffc107', '#28a745']
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+

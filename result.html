@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header {% if risk_level == 'High Risk' %}bg-danger{% elif risk_level == 'Medium Risk' %}bg-warning{% else %}bg-success{% endif %} text-white">
+                    <h3 class="mb-0 text-center">
+                        <i class="bi bi-heart-pulse"></i> Prediction Results
+                    </h3>
+                </div>
+                <div class="card-body text-center py-5">
+                    {% if risk_level == 'High Risk' %}
+                        <div class="mb-4">
+                            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 4rem;"></i>
+                        </div>
+                        <h2 class="text-danger mb-3">{{ prediction }}</h2>
+                        <div class="alert alert-danger" role="alert">
+                            <strong>Risk Level:</strong> {{ risk_level }}<br>
+                            <strong>Probability:</strong> {{ "%.2f"|format(probability) }}%
+                        </div>
+                        <p class="text-muted">Please consult with a healthcare professional immediately for further evaluation.</p>
+                    {% elif risk_level == 'Medium Risk' %}
+                        <div class="mb-4">
+                            <i class="bi bi-exclamation-circle-fill text-warning" style="font-size: 4rem;"></i>
+                        </div>
+                        <h2 class="text-warning mb-3">{{ prediction }}</h2>
+                        <div class="alert alert-warning" role="alert">
+                            <strong>Risk Level:</strong> {{ risk_level }}<br>
+                            <strong>Probability:</strong> {{ "%.2f"|format(probability) }}%
+                        </div>
+                        <p class="text-muted">Consider consulting with a healthcare professional for preventive care.</p>
+                    {% else %}
+                        <div class="mb-4">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                        </div>
+                        <h2 class="text-success mb-3">{{ prediction }}</h2>
+                        <div class="alert alert-success" role="alert">
+                            <strong>Risk Level:</strong> {{ risk_level }}<br>
+                            <strong>Probability:</strong> {{ "%.2f"|format(probability) }}%
+                        </div>
+                        <p class="text-muted">Continue maintaining a healthy lifestyle and regular check-ups.</p>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <div class="progress mb-2" style="height: 30px;">
+                            <div class="progress-bar {% if risk_level == 'High Risk' %}bg-danger{% elif risk_level == 'Medium Risk' %}bg-warning{% else %}bg-success{% endif %}" 
+                                 role="progressbar" 
+                                 style="width: {{ probability }}%" 
+                                 aria-valuenow="{{ probability }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                Risk Probability: {{ "%.1f"|format(probability) }}%
+                            </div>
+                        </div>
+                        {% if health_score %}
+                        <div class="mt-3">
+                            <h6>Health Score</h6>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar {% if health_score >= 70 %}bg-success{% elif health_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                     role="progressbar" 
+                                     style="width: {{ health_score }}%" 
+                                     aria-valuenow="{{ health_score }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ "%.1f"|format(health_score) }}/100
+                                </div>
+                            </div>
+                            <small class="text-muted">Based on your medical parameters</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-5">
+                        <a href="{{ url_for('feature_importance', rec_id=record_id) }}" class="btn btn-info btn-lg me-2">
+                            <i class="bi bi-bar-chart"></i> View Analysis
+                        </a>
+                        <a href="{{ url_for('generate_pdf', rec_id=record_id) }}" class="btn btn-danger btn-lg me-2" target="_blank">
+                            <i class="bi bi-file-pdf"></i> Download PDF
+                        </a>
+                        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-2">
+                            <i class="bi bi-arrow-left"></i> Back to Form
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {% if recommendations %}
+            <div class="card shadow border-0 mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-heart"></i> Personalized Health Recommendations</h5>
+                </div>
+                <div class="card-body">
+                    {% for rec in recommendations %}
+                    <div class="alert {% if rec.priority == 'high' %}alert-danger{% elif rec.priority == 'medium' %}alert-warning{% else %}alert-info{% endif %} mb-3">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-{% if rec.priority == 'high' %}exclamation-triangle{% elif rec.priority == 'medium' %}info-circle{% else %}check-circle{% endif %}"></i>
+                            {{ rec.title }}
+                        </h6>
+                        <p class="mb-0">{{ rec.description }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h5 class="card-title">Important Disclaimer</h5>
+                    <p class="card-text text-muted small">
+                        This prediction is based on machine learning algorithms and should not replace professional medical advice. 
+                        Always consult with qualified healthcare professionals for accurate diagnosis and treatment.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

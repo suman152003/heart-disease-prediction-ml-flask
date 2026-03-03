@@ -1,0 +1,172 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-clock-history"></i> My Prediction History
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="text-muted">Total Predictions</h5>
+                                    <h2 class="text-primary">{{ total }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body">
+                                    <h5>High Risk</h5>
+                                    <h2>{{ high }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <h5>Medium Risk</h5>
+                                    <h2>{{ med }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h5>Low Risk</h5>
+                                    <h2>{{ low }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if records|length > 0 %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="bi bi-graph-up"></i> Prediction Trend (Last 10)</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="trendChart" height="80"></canvas>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> All Predictions</h5>
+                </div>
+                <div class="card-body">
+                    {% if records|length > 0 %}
+                    <div class="mb-3">
+                        {% if records|length >= 2 %}
+                        <a href="{{ url_for('compare_predictions') }}" class="btn btn-info">
+                            <i class="bi bi-graph-up-arrow"></i> Compare Predictions
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Risk Level</th>
+                                    <th>Probability</th>
+                                    <th>Health Score</th>
+                                    <th>Age</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in records %}
+                                <tr>
+                                    <td>{{ r.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        <span class="badge {% if r.prediction == 'High Risk' %}bg-danger{% elif r.prediction == 'Medium Risk' %}bg-warning{% else %}bg-success{% endif %}">
+                                            {{ r.prediction }}
+                                        </span>
+                                    </td>
+                                    <td>{{ "%.2f"|format(r.probability * 100) }}%</td>
+                                    <td>
+                                        {% if r.health_score %}
+                                        <div class="progress" style="height: 20px; width: 100px;">
+                                            <div class="progress-bar {% if r.health_score >= 70 %}bg-success{% elif r.health_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                 style="width: {{ r.health_score }}%">
+                                                {{ "%.0f"|format(r.health_score) }}
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ r.age }}</td>
+                                    <td>
+                                        <a href="{{ url_for('view_result', rec_id=r.id) }}" class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                        <a href="{{ url_for('feature_importance', rec_id=r.id) }}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-bar-chart"></i> Analysis
+                                        </a>
+                                        <a href="{{ url_for('generate_pdf', rec_id=r.id) }}" class="btn btn-sm btn-danger" target="_blank">
+                                            <i class="bi bi-file-pdf"></i> PDF
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="bi bi-info-circle"></i> No predictions yet. <a href="{{ url_for('index') }}">Make your first prediction</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const trendData = {{ trend_data|safe }};
+    if (trendData && trendData.length > 0) {
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: trendData.map(d => d.date),
+                datasets: [{
+                    label: 'Risk Probability (%)',
+                    data: trendData.map(d => d.probability),
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}
+
